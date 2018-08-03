@@ -75,7 +75,7 @@ class ClientList extends Component {
 
     }
 
-    
+
     deleteClient(id) {
 
         var db = firebase.firestore();
@@ -129,13 +129,15 @@ class ClientList extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div>
+                <div >
                     <input type="text" className="form-control" placeholder="Name" aria-label="Name" aria-describedby="basic-addon1" value={this.state.name} onChange={(e) => { this.setState({ name: e.target.value }) }} />
                     <input type="text" className="form-control" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1" value={this.state.email} onChange={(e) => { this.setState({ email: e.target.value }) }} />
+
+                    <button onClick={this.addClient.bind(this)} className="btn btn-success btn-lg btn-block space otherLetterB">
+                        Add Update
+                    </button>
                 </div>
-                <button onClick={this.addClient.bind(this)} className="btn btn-secondary btn-success right otherLetterB">
-                    Add Update
-                </button>
+
             </div>
         );
     }

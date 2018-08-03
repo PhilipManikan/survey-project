@@ -1,5 +1,5 @@
-import React, { Component }
-    from 'react'; require('../firebase/firebaseConfig')
+import React, { Component } from 'react';
+require('../firebase/firebaseConfig')
 import * as firebase from 'firebase';
 
 import Title from '../helpers/title'
@@ -10,6 +10,8 @@ import MultipleChoice from '../buttontypes/multiplechoice'
 import RadioRating from '../buttontypes/rating'
 import ButtonRating from '../buttontypes/buttonrating';
 import TextBoxRegular from '../buttontypes/textboxregular'
+import Custom from '../helpers/custom'
+import Editor from '../helpers/editor';
 
 
 require("firebase/firestore");
@@ -25,31 +27,34 @@ class QuestionList extends Component {
             starRating: false,
             buttonRating: false,
             multipleChoice: false,
-            feedbackQuestion: [{
-                number: "",
+
+            surveyname: '',
+            questions: [{
+                id: "",
                 question: "",
-                type: ""
+                type: "",
+                options: []
             }],
-            number: "",
+
+
             question: "",
             type: "",
+            options: ["option1", "option2"],
             id: "",
+
             survey: [{
-                surveyname: "",
+                id: "",
                 created: ""
             }],
-            surveyname: "",
-            created: "",
-            info: '',
-            infoText: '',
-            radio: '',
-            radio2: '',
-            radio3: '',
-            radio4: '',
-            rating: '',
-            type: ''
 
+            results: [{
+                result: "No Answer"
+            }],
 
+            value: '3',
+            type: '',
+
+            dataLoaded: false
         }
     }
 
@@ -58,25 +63,22 @@ class QuestionList extends Component {
 
     componentDidMount() {
         var db = firebase.firestore();
-        db.collection("feedbackQuestion").onSnapshot(querySnapshot => {
+
+        db.collection("questions").onSnapshot(querySnapshot => {
             this.setState({
-                feedbackQuestion: []
+                questions: []
             });
             querySnapshot.forEach(doc => {
                 this.setState({
-                    feedbackQuestion: [...this.state.feedbackQuestion, { id: doc.id, ...doc.data() }]
+                    questions: [...this.state.questions, { id: doc.id, ...doc.data() }]
                 });
             })
-            var sortNumber = [...this.state.feedbackQuestion];
             this.setState({
-                feedbackQuestion: sortNumber.sort((a, b) => a.number - b.number)
-            })
-
-            this.setState({
-                number: "",
                 question: "",
                 type: "",
-                id: ""
+                options: [],
+                id: "",
+                dataLoaded: true
             })
         });
     }
@@ -85,32 +87,28 @@ class QuestionList extends Component {
         var db = firebase.firestore();
         if (this.state.id == "") {
             let newfeedbackQuestion = {
-                number: this.state.number,
+                id: this.state.id,
                 question: this.state.question,
-                type: this.state.type
+                type: this.state.type,
+                options: [...this.state.options]
             }
             var db = firebase.firestore();
-            db.collection("feedbackQuestion").add(newfeedbackQuestion);
-
+            db.collection("questions").add(newfeedbackQuestion);
         }
         else {
-            db.collection("feedbackQuestion").doc(this.state.id).set({
-                number: this.state.number,
+            db.collection("questions").doc(this.state.id).set({
+                id: this.state.id,
                 question: this.state.question,
-                type: this.state.type
-            })
-                .then(function () {
-                    console.log("Document successfully written!");
-                })
-                .catch(function (error) {
-                    console.error("Error writing document: ", error);
-                });
+                type: this.state.type,
+                options: [...this.state.options]
 
+            })
             this.setState({
-                number: "",
+                id: "",
                 question: "",
                 type: "",
-                id: ""
+                options: [],
+
             })
         }
 
@@ -120,120 +118,29 @@ class QuestionList extends Component {
 
         var db = firebase.firestore();
 
-        db.collection("feedbackQuestion").doc(id).delete().then(function () {
+        db.collection("questions").doc(id).delete().then(function () {
             console.log("Document successfully deleted!");
         }).catach(function (error) {
             console.error("Error on removing document: ", error);
         });
     }
 
-    addSurvey() {
+    async addSurvey() {
         var db = firebase.firestore();
-        db.collection("feedbackQuestion").onSnapshot(querySnapshot => {
-            this.setState({
-                feedbackQuestion: []
-            });
-            querySnapshot.forEach(doc => {
-                this.setState({
-                    feedbackQuestion: [...this.state.feedbackQuestion, { id: doc.id, ...doc.data() }]
-                });
-            })
-        });
-        let newsurvey =
-        {
-            surveyname: this.state.surveyname,
-            created: this.state.created,
-            feedbackQuestion: [...this.state.feedbackQuestion]
+        console.log(this.state.questions)
+        let { questions, surveyname } = this.state;
+        await db.collection('survey').doc(surveyname).set({ questions });
 
-        }
-        var db = firebase.firestore();
-        db.collection("survey").add(newsurvey);
-
-        this.setState({
-            surveyname: "",
-            created: "",
-            id: ""
-        })
     }
 
     updateForm(feedback) {
 
         this.setState({
-            number: feedback.number,
             question: feedback.question,
             type: feedback.question,
             id: feedback.id
         })
     }
-
-    //SELECT OPTION COMPONENT
-    handleSelectChange = (event) => {
-        console.log('clicked value: ' + event.target.value)
-        this.setState({
-            option: event.target.value
-        })
-
-    }
-
-    //MULTIPLE CHOICE 1
-    onRadioChange2(value) {
-        console.log("radio2 clicked");
-        this.setState({
-            radio2: value,
-        })
-    }
-    //MULTIPLE CHOICE 2
-    onRadioChange3(value) {
-        console.log("radio3 clicked");
-        this.setState({
-            radio3: value,
-        })
-    }
-    //MULTIPLE CHOICE 3
-    onRadioChange4(value) {
-        console.log("radio4 clicked");
-        this.setState({
-            radio4: value,
-        })
-    }
-
-
-    //BUTTON RATING
-    onRadioChange1(value) {
-        console.log("radio change");
-        this.setState({
-            radio1: value,
-        })
-        console.log(this.state.radio1)
-    }
-
-    //RATING RADIO
-    onRadioChange(value) {
-        console.log("radio change");
-        this.setState({
-            radio: value,
-        })
-        console.log(this.state.radio)
-    }
-
-
-    //TEXTBOX LARGE
-    handleChange(event) {
-        this.setState({ info: event.target.value });
-        console.log(this.state.info)
-    }
-
-    //TEXTBOX REGULAR
-    handleChangeText(event) {
-        this.setState({ infoText: event.target.value });
-        console.log(this.state.infoText)
-    }
-
-    //STAR
-    // onStarRating(value) {
-    //     console.log(this.state.rating);
-    // }
-
 
 
     /////// Show buttons component 
@@ -241,6 +148,7 @@ class QuestionList extends Component {
 
         this.setState({
             type: "Text Box Single",
+            options: " ",
             textBoxSingle: true,
             textBox: false,
             dropDown: false,
@@ -254,6 +162,7 @@ class QuestionList extends Component {
     textBoxShow() {
         this.setState({
             type: "Text Box Full",
+            options: " ",
             textBoxSingle: false,
             textBox: true,
             dropDown: false,
@@ -280,6 +189,7 @@ class QuestionList extends Component {
     starRatingShow() {
         this.setState({
             type: "Star Rating",
+            options: " ",
             textBoxSingle: false,
             textBox: false,
             dropDown: false,
@@ -293,6 +203,7 @@ class QuestionList extends Component {
     radioRatingShow() {
         this.setState({
             type: "Radio Rating",
+            options: " ",
             textBoxSingle: false,
             textBox: false,
             dropDown: false,
@@ -305,6 +216,7 @@ class QuestionList extends Component {
     buttonRatingShow() {
         this.setState({
             type: "Button Rating",
+            options: " ",
             textBoxSingle: false,
             textBox: false,
             dropDown: false,
@@ -329,67 +241,103 @@ class QuestionList extends Component {
         })
     }
 
+    saveSettings = options => {
+
+        this.setState({
+            options: options
+        })
+    }
+
+    currValueCreator = id => value => {
+
+        this.setState({
+            result: this.state.result
+        })
+    }
+
     render() {
         return (
             <div className="container">
                 <Title header="Survey Edit" />
-                <div className="row">
-                    <table className="table table-borderless">
-                        <thead>
-                            <tr>
-                                <th scope="col" className="otherLetter">Question</th>
-                                <th scope="col" className="otherLetter">Type</th>
-                            </tr>
-                        </thead>
-                        <tbody >
-                            {this.state.feedbackQuestion.map((list, index) => {
-                                return (
-                                    <tr key={index}>
-                                        <td className="otherLetterB" >{list.number}.
-                                        {list.question} </td>
 
-                                        {/* FOR TESTING ONLY */}
-                                        <td dangerouslySetInnerHTML={{ __html: list.type }}></td>
+                <div className="row justify-content-md-center">
 
-                                        <td></td>
+                    <div className="col col-lg-9 space" >
 
-
-
-                                        <td>
-                                            <button className="btn btn-outline-secondary otherLetterB" onClick={this.updateForm.bind(this, list)}>
-                                                Update
+                        {this.state.dataLoaded == true && this.state.questions.map((list, index) => {
+                            return (
+                                <div key={index} >
+                                    <div className="otherLetterB space" >{list.id}.
+                                        {list.question} </div>
+                                    <div>
+                                        <Custom type={list.type} options={list.options} currValue={this.currValueCreator(list.id)} />
+                                    </div>
+                                    <br />
+                                    <div>
+                                        <button className="btn btn-outline-secondary otherLetterB" onClick={this.updateForm.bind(this, list)}>
+                                            Update
                                             </button>
-                                            <button className="btn btn-outline-danger otherLetterB" onClick={this.deleteQuestion.bind(this, list.id)}>
-                                                Remove
+                                        <button className="btn btn-outline-danger otherLetterB" onClick={this.deleteQuestion.bind(this, list.id)}>
+                                            Remove
                                             </button>
-                                        </td>
-                                    </tr>
-
-                                )
-                            })}
-                        </tbody>
-                    </table>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
 
-                <div>
-                    <input type="text" className="form-control" placeholder="Number" aria-label="Number" aria-describedby="basic-addon1" value={this.state.number} onChange={(e) => { this.setState({ number: e.target.value }) }} />
-                    <input type="text" className="form-control" placeholder="Question" aria-label="Question" aria-describedby="basic-addon1" value={this.state.question} onChange={(e) => { this.setState({ question: e.target.value }) }} />
 
+                <div className="bgc">
+                    <Title header="Create or Edit Question" />
+                    <div className="form-row">
+                        <div className="form-group col-md-1">
+                            <input type="text" className="form-control" placeholder="Number" aria-label="Number" aria-describedby="basic-addon1" value={this.state.id} onChange={(e) => { this.setState({ id: e.target.value }) }} />
+                        </div>
+                        <div className="form-group col-md-11">
+                            <input type="text" className="form-control" placeholder="Question" aria-label="Question" aria-describedby="basic-addon1" value={this.state.question} onChange={(e) => { this.setState({ question: e.target.value }) }} />
+                        </div>
+                    </div>
                     <div className="container">
-                        <div className=".col-lg-6 height">
-                            <div> {this.state.textBox ? <TextBoxFull info={this.state.info} handleChange={this.handleChange.bind(this)} /> : null}  </div>
-                            {this.state.textBoxSingle ? <div> <TextBoxRegular infoText={this.state.infoText} handleChangeText={this.handleChangeText.bind(this)} />       </div> : null}
+                        <div className=".col-lg-6 height" id="scroll">
+                            <Title header="Sample" />
+                            <div> {this.state.textBox ? <TextBoxFull /> : null}  </div>
+                            {this.state.textBoxSingle ? <div> <TextBoxRegular />       </div> : null}
                             {this.state.starRating ? <div> <StarRating />           </div> : null}
-                            {this.state.dropDown ? <div> <Dropdown />             </div> : null}
-                            {this.state.radioRating ? <div> <RadioRating radio2={this.state.radio2}
-                                radio3={this.state.radio3}
-                                radio4={this.state.radio4}
-                                onRadioChange2={this.onRadioChange2.bind(this)}
-                                onRadioChange3={this.onRadioChange3.bind(this)}
-                                onRadioChange4={this.onRadioChange4.bind(this)} />          </div> : null}
-                            {this.state.buttonRating ? <div> <ButtonRating onRadioChange1={this.onRadioChange1.bind(this)}
-                                radio1={this.state.radio1} />         </div> : null}
-                            {this.state.multipleChoice ? <div> <MultipleChoice />       </div> : null}
+
+
+                            {this.state.dropDown ?
+                                <div className="col-sm">
+                                    <Dropdown />
+                                    <div className="col-sm" >
+                                        <Editor options={['Select Dropdown', 'option 1', 'option 2']} saveSettings={this.saveSettings} />
+                                    </div >
+                                </div> : null}
+
+
+                            {this.state.radioRating ?
+
+                                <div className="col-sm">
+                                    <RadioRating />
+
+                                    <div className="col-sm" >
+                                        <Editor options={['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree']} saveSettings={this.saveSettings} />
+                                    </div >
+                                </div > : null}
+
+
+                            {this.state.buttonRating ? <div> <ButtonRating />         </div> : null}
+
+
+                            {this.state.multipleChoice ? <div className="row">
+                                <div className="col-sm">
+                                    <MultipleChoice />
+                                </div>
+                                <div className="col-sm" >
+                                    <Editor options={['option1', 'option2', 'option3', 'option4']} saveSettings={this.saveSettings} />
+                                </div >
+                            </div> : null}
+
 
                         </div>
                     </div>
@@ -435,9 +383,9 @@ class QuestionList extends Component {
                 <div>
                     <div>
                         <input type="text" className="form-control" placeholder="Survey Name" aria-label="Survey Name" aria-describedby="basic-addon1" value={this.state.surveyname} onChange={(e) => { this.setState({ surveyname: e.target.value }) }} />
-                        <input type="date" className="form-control" placeholder="Created" aria-label="Created" aria-describedby="basic-addon1" value={this.state.created} onChange={(e) => { this.setState({ created: e.target.value }) }} />
+
                     </div>
-                    <button className="btn btn-secondary btn-lg btn-block space otherLetterB"
+                    <button className="btn btn-primary btn-lg btn-block space otherLetterB"
                         onClick={this.addSurvey.bind(this)}
                     >
                         Create Survey

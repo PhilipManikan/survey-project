@@ -1,0 +1,193 @@
+import React, { Component } from 'react';
+require('../firebase/firebaseConfig')
+import * as firebase from 'firebase';
+
+
+import Custom from '../helpers/custom';
+
+class Survey extends Component {
+    state = {
+
+        // sample: [
+        //     {
+        //         id: 1,
+        //         question: 'Who do you like?',
+        //         type: 'Multiple Choice',
+        //         options: [
+        //             'option a',
+        //             'option b',
+        //             'option c',
+        //             'option d',
+        //         ]
+        //     },
+        //     {
+        //         id: 2,
+        //         type: 'Text Box Full',
+        //         options: [
+        //             'option a',
+        //             'option b',
+        //             'option c',
+        //             'option d',
+        //         ]
+        //     },
+        //     {
+        //         id: 3,
+        //         type: 'Radio Rating',
+        //         options: [
+        //             'option a',
+        //             'option b',
+        //             'option c',
+        //             'option d',
+        //         ]
+        //     },
+        //     {
+        //         id: 4,
+        //         type: 'Button Rating',
+        //         options: [
+        //             'option a',
+        //             'option b',
+        //             'option c',
+        //             'option d',
+        //         ]
+        //     },
+        //     {
+        //         id: 5,
+        //         type: 'Star Rating',
+        //         options: [
+        //             'option a',
+        //             'option b',
+        //             'option c',
+        //             'option d',
+        //         ]
+        //     }
+        // ],
+        // results: [
+        //     {
+        //         id: 1,
+        //         type: 'Multiple Choice',
+        //         result: 'option a'
+        //     },
+        //     {
+        //         id: 2,
+        //         type: 'Text Box Full',
+        //         result: 'option a'
+        //     },
+        //     {
+        //         id: 3,
+        //         type: 'Radio Rating',
+        //         result: 'option a'
+        //     },
+        //     {
+        //         id: 4,
+        //         type: 'Button Rating',
+        //         result: 'option a'
+        //     },
+        //     {
+        //         id: 5,
+        //         type: 'Star Rating',
+        //         result: 'option a'
+        //     }
+        // ]
+
+        feedbackQuestion: [{
+            id: "",
+            question: "",
+            type: "",
+            options: [],
+            results: [{
+                result: "",
+                id:""
+            }],
+        }],
+        question: "",
+        type: "",
+        options: ["option1", "option2"],
+        id: "",
+        results: [{
+            result: "No Answer",
+            id:""
+        }],
+
+
+
+
+    }
+
+    componentDidMount() {
+        var db = firebase.firestore();
+
+        db.collection("feedbackQuestion").onSnapshot(querySnapshot => {
+            this.setState({
+                feedbackQuestion: []
+            });
+            querySnapshot.forEach(doc => {
+                this.setState({
+                    feedbackQuestion: [...this.state.feedbackQuestion, { id: doc.id, ...doc.data() }]
+                });
+            })
+            var sortNumber = [...this.state.feedbackQuestion];
+            this.setState({
+                feedbackQuestion: sortNumber.sort((a, b) => a.number - b.number)
+            })
+
+            this.setState({
+                question: "",
+                type: "",
+                options: [],
+                id: "",
+                results: [{
+                    result: "",
+                    id:""
+                }],
+                dataLoaded: true
+            })
+        });
+    }
+
+
+    currValueCreator = id => value => {
+        // let copy = [...this.state.results];
+        // let indexToChange = copy.findIndex(x => x.id === id);
+
+        // // // edit the result to show current selection
+        // copy[indexToChange].result = value;
+        // this.setState({
+        //     results: copy
+        // })
+        this.setState({
+            result: this.state.result
+        })
+    }
+
+    submitSurvey = () => {
+        // do all your submit survey logic here: db/api/etc
+        console.log('Submit', this.state.results)
+    }
+
+    render() {
+        return (
+            <div>
+                {/* {
+                    this.state.sample.map(x => (
+                        <Custom type={x.type} options={x.options} question={x.question} currValue={this.currValueCreator(x.id)} />
+                    ))
+                } */}
+
+                {this.state.dataLoaded == true && this.state.feedbackQuestion.map((x, index) => {
+                    return (
+                        <div key={index} >
+                            <div className="otherLetterB space" >{x.id}.
+                        {x.question} </div>
+
+                            <Custom type={x.type} options={x.options} currValue={this.currValueCreator(x.id)} />
+                        </div>
+                    )
+                })}
+
+                <button className="btn btn-primary" onClick={this.submitSurvey}>Submit</button>
+            </div>
+        );
+    }
+}
+
+export default Survey;
